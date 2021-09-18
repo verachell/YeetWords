@@ -1,7 +1,7 @@
 # YeetWords
 ## a domain-specific language for text substitution
 
-YeetWords is a domain-specific language for text subtitution, and is suitable for programming generative fiction such as NaNoGenMo projects. It is aimed at complete beginners and up.
+YeetWords is a domain-specific language for text substitution, and is suitable for programming generative fiction such as NaNoGenMo projects. It is aimed at complete beginners and up.
 
 It is implemented in Ruby, although the YeetWords syntax does not resemble Ruby, nor is any Ruby knowledge necessary for use.
 
