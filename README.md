@@ -11,23 +11,18 @@ YeetWords takes your YeetWords code and outputs a text file in Markdown format.
 
 ## Contents
 
-[Installation and usage](https://github.com/verachell/YeetWords/blob/main/README.md#installation-and-usage)
-
-[Overview](https://github.com/verachell/YeetWords/blob/main/README.md#overview)
-
-- [Features](https://github.com/verachell/YeetWords/blob/main/README.md#features)
-
-- [Restrictions](https://github.com/verachell/YeetWords/blob/main/README.md#restrictions)
-
-[Credits](https://github.com/verachell/YeetWords/blob/main/README.md#credits)
-
-[License & development info](https://github.com/verachell/YeetWords/blob/main/README.md#license--development-info)
+[Installation and usage](https://github.com/verachell/YeetWords/blob/main/README.md#installation-and-usage)  
+[Overview](https://github.com/verachell/YeetWords/blob/main/README.md#overview)  
+- [Features](https://github.com/verachell/YeetWords/blob/main/README.md#features)  
+- [Restrictions](https://github.com/verachell/YeetWords/blob/main/README.md#restrictions)  
+[Credits](https://github.com/verachell/YeetWords/blob/main/README.md#credits)  
+[License & development info](https://github.com/verachell/YeetWords/blob/main/README.md#license--development-info)  
 
 ## Installation and usage
 
 Usage is covered in the tutorial and wiki mentioned above, but the basic approach is:
 
-1. If you don't already have it, install Ruby on your machine (this is covered in the [quickstart tutorial](https://github.com/verachell/YeetWords/wiki/QuickStart-Tutorial)
+1. If you don't already have it, install Ruby on your machine (this is covered in the [quickstart tutorial](https://github.com/verachell/YeetWords/wiki/QuickStart-Tutorial))
 
 2. Make sure you have downloaded the ```yeetwords.rb``` file from this repository in your working directory on your computer.
 
