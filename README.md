@@ -7,7 +7,7 @@ It is implemented in Ruby, although the YeetWords syntax does not resemble Ruby,
 
 Here is the [Quickstart Tutorial](https://github.com/verachell/YeetWords/wiki/QuickStart-Tutorial) and here is the [full Wiki](https://github.com/verachell/YeetWords/wiki)
 
-It takes your YeetWords code and outputs a text file in Markdown format.
+YeetWords takes your YeetWords code and outputs a text file in Markdown format.
 
 ## Contents
 
