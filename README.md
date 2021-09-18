@@ -13,8 +13,8 @@ YeetWords takes your YeetWords code and outputs a text file in Markdown format.
 
 [Installation and usage](https://github.com/verachell/YeetWords/blob/main/README.md#installation-and-usage)  
 [Overview](https://github.com/verachell/YeetWords/blob/main/README.md#overview)  
-- [Features](https://github.com/verachell/YeetWords/blob/main/README.md#features)  
-- [Restrictions](https://github.com/verachell/YeetWords/blob/main/README.md#restrictions)  
+> [Features](https://github.com/verachell/YeetWords/blob/main/README.md#features)  
+> [Restrictions](https://github.com/verachell/YeetWords/blob/main/README.md#restrictions)  
 [Credits](https://github.com/verachell/YeetWords/blob/main/README.md#credits)  
 [License & development info](https://github.com/verachell/YeetWords/blob/main/README.md#license--development-info)  
 
