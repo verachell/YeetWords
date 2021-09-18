@@ -11,13 +11,13 @@ It takes your YeetWords code and outputs a text file in Markdown format.
 
 ## Contents
 
-Installation and usage
+[Installation and usage](https://github.com/verachell/YeetWords/blob/main/README.md#installation-and-usage)
 
 Overview
 
->Features
+- Features
 
->Restrictions
+- Restrictions
 
 Credits
 
