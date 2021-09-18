@@ -13,15 +13,15 @@ It takes your YeetWords code and outputs a text file in Markdown format.
 
 [Installation and usage](https://github.com/verachell/YeetWords/blob/main/README.md#installation-and-usage)
 
-Overview
+[Overview](https://github.com/verachell/YeetWords/blob/main/README.md#overview)
 
-- Features
+- [Features](https://github.com/verachell/YeetWords/blob/main/README.md#features)
 
-- Restrictions
+- [Restrictions](https://github.com/verachell/YeetWords/blob/main/README.md#restrictions)
 
-Credits
+[Credits](https://github.com/verachell/YeetWords/blob/main/README.md#credits)
 
-License & development info
+[License & development info](https://github.com/verachell/YeetWords/blob/main/README.md#license--development-info)
 
 ## Installation and usage
 
