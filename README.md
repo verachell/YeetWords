@@ -5,7 +5,7 @@ YeetWords is a domain-specific language for text subtitution, and is suitable fo
 
 It is implemented in Ruby, although the YeetWords syntax does not resemble Ruby, nor is any Ruby knowledge necessary for use.
 
-Here is the Quickstart Tutorial-- and here is the full Wiki--
+Here is the [Quickstart Tutorial](https://github.com/verachell/YeetWords/wiki/QuickStart-Tutorial) and here is the [full Wiki](https://github.com/verachell/YeetWords/wiki)
 
 It takes your YeetWords code and outputs a text file in Markdown format.
 
@@ -27,7 +27,7 @@ It takes your YeetWords code and outputs a text file in Markdown format.
 
 Usage is covered in the tutorial and wiki mentioned above, but the basic approach is:
 
-1. If you don't already have it, install Ruby on your machine (this is covered in the tutorial--)
+1. If you don't already have it, install Ruby on your machine (this is covered in the [quickstart tutorial](https://github.com/verachell/YeetWords/wiki/QuickStart-Tutorial)
 
 2. Make sure you have downloaded the ```yeetwords.rb``` file from this repository in your working directory on your computer.
 
