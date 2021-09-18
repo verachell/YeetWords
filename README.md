@@ -63,7 +63,7 @@ Create loops, change your vocabulary, kill off characters, add or subtract items
 
 - On the other hand, user is not obligated to provide word and sentence files - the user may instead opt to specify words and sentences entirely within their program (this may be desirable in the case of a user program with a very small vocabulary).
 
-- Good gender support - handles male, female, and non-binary humans, plus genderless entities.
+- Good gender support - handles male, female, and non-binary humans, plus genderless robots.
 
 ### Restrictions
 
