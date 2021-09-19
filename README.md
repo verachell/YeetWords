@@ -5,7 +5,7 @@ YeetWords is a domain-specific language for text substitution, and is suitable f
 
 It is implemented in Ruby, although the YeetWords syntax does not resemble Ruby, nor is any Ruby knowledge necessary for use.
 
-Here is the [Quickstart Tutorial](https://github.com/verachell/YeetWords/wiki/QuickStart-Tutorial) and here is the [full Wiki](https://github.com/verachell/YeetWords/wiki). For a working example, you can see a previous NaNoGenMo project now [ported into YeetWords code here](https://github.com/verachell/Horror-Story-Ported).
+Here is the [Quickstart Tutorial](https://github.com/verachell/YeetWords/wiki/QuickStart-Tutorial) and here is the [full Wiki](https://github.com/verachell/YeetWords/wiki). For a working example, you can see an old NaNoGenMo project [ported into YeetWords code here](https://github.com/verachell/Horror-Story-Ported).
 
 YeetWords takes your YeetWords code and outputs a text file in Markdown format.
 
