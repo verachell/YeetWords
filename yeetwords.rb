@@ -1006,6 +1006,13 @@ def assign_parse(style, curr_state, cmdhash)
           if possible_value[:unit_type] == style then
             # the types match; proceed with selection
             rvalue = select_random_unique.call(howmany, possible_value[:value])
+           ### begin changes for v1.1.0 ###
+          # next allow for list assignment from catalog
+          elsif (style == :list) and (possible_value[:unit_type] == :catalog) then
+            rvalue = Array.new
+            catitems = select_random_unique.call(howmany, possible_value[:value])
+            catitems.each_value{|value| rvalue = rvalue + value}
+           ### end changes for v1.1.0 ###
           else
             # ERR_ID CARROT
             stop_with_general_command_error("The name of your command does not match the type of your variable #{rsplit[0]}", command, cmdhash[:linenum], cmdhash[:comline])
