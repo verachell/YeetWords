@@ -145,8 +145,13 @@ def select_random(unique, howmany, arr, exclude = [])
       return dest
     else
       max_ind = source.size - 1
+      # performance enhancement - shortcut when there is only 1 item
+      if max_ind == 0 then
+        r_item = source[0]
+      else
       r_ind = rand(0..max_ind)
       r_item = source[r_ind]
+      end
       dest << r_item
       if unique == true then
         newsource = source - [r_item]
@@ -1006,13 +1011,13 @@ def assign_parse(style, curr_state, cmdhash)
           if possible_value[:unit_type] == style then
             # the types match; proceed with selection
             rvalue = select_random_unique.call(howmany, possible_value[:value])
-           ### begin changes for v1.1.0 ###
+          ### begin changes for v1.1.0 ###
           # next allow for list assignment from catalog
           elsif (style == :list) and (possible_value[:unit_type] == :catalog) then
             rvalue = Array.new
             catitems = select_random_unique.call(howmany, possible_value[:value])
             catitems.each_value{|value| rvalue = rvalue + value}
-           ### end changes for v1.1.0 ###
+          ### end changes for v1.1.0 ###
           else
             # ERR_ID CARROT
             stop_with_general_command_error("The name of your command does not match the type of your variable #{rsplit[0]}", command, cmdhash[:linenum], cmdhash[:comline])
@@ -1306,7 +1311,7 @@ def a_an(one_sentence)
       startmatch = tempstr.dup.index(match)
       tempstr = tempstr.dup.insert(startmatch + 1, "n")}
   end
-    if one_sentence.match?(/\ A\ [AEIOU]/) then
+  if one_sentence.match?(/\ A\ [AEIOU]/) then
     tempstr.scan(/\ A\ [AEIOU]/){|match|
       startmatch = tempstr.dup.index(match)
       tempstr = tempstr.dup.insert(startmatch + 2, "N")}
@@ -1417,8 +1422,8 @@ def format_sentence(sentence, lettercode, curr_state, style = :md)
   end
 end
 
-def standard_write(curr_state, sentence_value, word_value, order_style, curr_cond, stop_cond, inc_style, desired_index = 0, format = curr_state["format"])
-  # returns the new state of the story after writing the requested
+def standard_write(story_arr, sentence_value, word_value, order_style, curr_cond, stop_cond, inc_style, desired_index, curr_state)
+  # returns the story_so_far array after writing the requested
   # amount to the story_so_far. This function is typically called by the
   # write function. Typechecking is not the
   # responsibility of standard_write; this is done earlier
@@ -1430,17 +1435,12 @@ def standard_write(curr_state, sentence_value, word_value, order_style, curr_con
   # The optional parameter desired_index indicate which index to pick from
   # sentence_value; when order_style is "random" this index number is randomly
   # assigned; when order_style is "order" this index starts at 0 and is
-  # later incremented. The optional format parameter indicates the desired
-  # formatting as per the format function.
-  if inc_style == :cycle then
-    new_curr = curr_cond + 1
-  else
-    # we know inc_style is :word
-    new_curr = word_count_arr(curr_state["story_so_far"])
-  end
-  if curr_cond >= stop_cond then
-    return curr_state
-  else
+  # later incremented. curr_state is used for reference and error reporting;
+  # it is not changed by this function.
+  format = curr_state["format"]
+  curr_line = curr_state["curr_line"]
+  while curr_cond < stop_cond
+    # iterate through story additions
     # need to select sentence, wordsub it, write it, and increment curr_cond
     # Be aware sentence_value may be a catalog or a list, although it would
     # have been converted into an array before this.
@@ -1457,14 +1457,14 @@ def standard_write(curr_state, sentence_value, word_value, order_style, curr_con
       single_sentence = select_random_one.call(indexed_item[1])[0]
       if single_sentence == nil then
         # ERR_ID SPINACH
-        stop_with_par_value_error.call("WRITE", curr_state["curr_line"][:linenum], curr_state["curr_line"][:comline], "your sentence variable should not contain any empty values - if a catalog, this means none of its lists should be empty", "an empty value")
+        stop_with_par_value_error.call("WRITE", curr_line[:linenum], curr_line[:comline], "your sentence variable should not contain any empty values - if a catalog, this means none of its lists should be empty", "an empty value")
       end
     end
     subbed_sentence = one_sentence_suball(single_sentence, curr_state, word_value)
     # format the sentence
     format_chars = format.chars
     formatted_sentence = format_chars.reduce(subbed_sentence){|changing_s, formatcode| format_sentence(changing_s, formatcode, curr_state)}
-    curr_state["story_so_far"] << formatted_sentence
+    story_arr << formatted_sentence
     # need to determine next desired_index.
     # If we are doing "order", then we don't worry about the previous
     # sentence being the same or not (because presumably the user has a
@@ -1477,19 +1477,27 @@ def standard_write(curr_state, sentence_value, word_value, order_style, curr_con
     # with multiple same sentences as the only sentence will result
     # in an endless loop.
     if order_style == "order" then
-      new_index = desired_index + 1
+      desired_index = desired_index + 1
     else
       # order_style is "random"
       if sentence_value.size == 1 then
-        new_index = 0
+        desired_index = 0
       else
         new_index_choices = (0..(sentence_value.size - 1)).to_a - [desired_index]
         new_choice_index = rand(0..(new_index_choices.size - 1))
-        new_index = new_index_choices[new_choice_index]
+        desired_index = new_index_choices[new_choice_index]
       end
     end
-    standard_write(curr_state, sentence_value, word_value, order_style, new_curr, stop_cond, inc_style, new_index)
+    # increment counters
+    if inc_style == :cycle then
+      curr_cond = curr_cond + 1
+    else
+      # it's number of words
+      curr_cond = word_count_arr(story_arr)
+    end
+    # end while loop
   end
+  return story_arr
 end
 
 def write(curr_state, cmdhash)
@@ -1606,9 +1614,18 @@ def write(curr_state, cmdhash)
     uplim = sentence_value.size - 1
     start_ind = rand(0..uplim)
   end
-  new_state = standard_write(new_state, sentence_value, word_info[:value], ordering, 0, amount, style, start_ind)
+  if style == :cycle then
+    start_cond = 0
+  else
+    # style is :word so need number of words at start
+    start_cond =  word_count_arr(new_state["story_so_far"])
+  end
+  new_story_so_far = standard_write(new_state["story_so_far"], sentence_value, word_info[:value], ordering, start_cond, amount, style, start_ind, new_state)
+  new_state["story_so_far"] = new_story_so_far
   return new_state
 end
+
+
 
 def special_write(curr_state, cmdhash, cmdname, sentence_str, format_str)
   # This function returns the current state after writing special commands
@@ -2372,7 +2389,6 @@ hasharr = progarr_2_hasharr(raw_commands)
 chunkarr = hasharr_2_chunkarr(hasharr)
 nested_commands = chunkarr_2_nestedprogarr(chunkarr)
 new_state = loop_iterator(story_state, nested_commands, 0, 1, :cycle)
-
 ### send completed story to file output ###
 if new_state["story_so_far"][0] == nil then
   story_begin = "STORY"
