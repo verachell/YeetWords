@@ -149,8 +149,8 @@ def select_random(unique, howmany, arr, exclude = [])
       if max_ind == 0 then
         r_item = source[0]
       else
-      r_ind = rand(0..max_ind)
-      r_item = source[r_ind]
+        r_ind = rand(0..max_ind)
+        r_item = source[r_ind]
       end
       dest << r_item
       if unique == true then
@@ -463,7 +463,7 @@ def gen_parse(curr_state, cmdhash, gen_name, howmany)
   new_state["curr_line"] = cmdhash
   allpars = cmdhash[:comline].strip
   # we should expect between 3 and 4 parameters
-  if (allpars != "") and (allpars.upcase != "GENEND") and (allpars[0] != "#") then
+  if (allpars != "") and (allpars.upcase != "GENEND") and (allpars[0] != "#") and (is_end?(allpars.upcase) == false) then
     # we have a non-blank and non-end line.
     # Blank lines are allowed but we don't want to attempt to process them.
     splitted_pars = allpars.split
@@ -1448,6 +1448,17 @@ def standard_write(story_arr, sentence_value, word_value, order_style, curr_cond
     # If order is random, pick random item from array, if string then it's the
     # desired sentence, else the item is an array, get 2nd item (= last item)
     # which is ALSO an array, pick random 1 from that list of sentences.
+    # First provide indication of progress to user
+    if large_loop?(curr_cond, stop_cond, inc_style) then
+      if (inc_style == :cycle) and (curr_cond % 1000 == 0) then
+        print "."
+      else
+        # :word
+        if (curr_cond % 1000 < 10) then
+          print "."
+        end
+      end
+    end
     indexed_item = sentence_value[desired_index % sentence_value.size]
     if indexed_item.class == String then
       single_sentence = indexed_item
@@ -1530,6 +1541,9 @@ def write(curr_state, cmdhash)
   # the previous sentence is normally excluded from the selection parameters
   # however; this is not always possible (e.g. a single item list of sentences)
   # The standard_write function handles that.
+  maxwordpar = 75000
+  maxcycpar = 125000
+  overmax = false
   new_state = curr_state.clone
   writepars = remove_first_word(cmdhash[:comline])
   writepars_arr = writepars.split
@@ -1575,12 +1589,21 @@ def write(curr_state, cmdhash)
     if valid_int?(amount_str) or valid_num_range?(amount_str) then
       amount = resolve_num_or_numrange(amount_str)
       style = :cycle
+      if amount > maxcycpar then
+        overmax = true
+      end
     elsif valid_word_num?(amount_str) then
       amount = amount_str.to_i + word_count_arr(new_state["story_so_far"])
       style = :word
+      if amount > maxwordpar then
+        overmax = true
+      end
     elsif valid_word_range?(amount_str) then
       amount = resolve_word_range(amount_str) + word_count_arr(new_state["story_so_far"])
       style = :word
+      if amount > maxwordpar then
+        overmax = true
+      end
     else
       # ERR_ID GUAR
       stop_with_general_command_error("Syntax error in requested number", "WRITE", cmdhash[:linenum], cmdhash[:comline], "a number or numerical range, or an amount of words or numerical range of words", amount_str)
@@ -1598,6 +1621,11 @@ def write(curr_state, cmdhash)
   else
     amount = 1
     style = :cycle
+  end
+  # emit warning if amount of repeats is large
+  if overmax == true then
+    # WARN_ID DURIAN
+    severe_warning.call("You have specified a high repeat parameter. This could take a long time. The maximum recommended value is #{maxwordpar.to_s}W (for words) or #{maxcycpar.to_s} (for cycles)", "WRITE", cmdhash[:linenum], cmdhash[:comline])
   end
   if sentence_info[:value].class == Hash then
     sentence_value = sentence_info[:value].to_a
@@ -1624,8 +1652,6 @@ def write(curr_state, cmdhash)
   new_state["story_so_far"] = new_story_so_far
   return new_state
 end
-
-
 
 def special_write(curr_state, cmdhash, cmdname, sentence_str, format_str)
   # This function returns the current state after writing special commands
@@ -2132,6 +2158,9 @@ def get_loop_pars(curr_state, cmdhash)
   # Will halt with error if user enters too many parameters or unrecognizable
   # parameters.
   # Called by loop_iterator.
+  maxwordpar = 75000
+  maxcycpar = 125000
+  overmax = false
   correct_usage = "\n LOOP 5 \n LOOP 4--10 \n LOOP 500W \n LOOP 600W--900W"
   user_cmd = "LOOP"
   loopcmds = cmdhash[:comline].split
@@ -2147,12 +2176,21 @@ def get_loop_pars(curr_state, cmdhash)
     user_range = word_range(loopcmds[1])
     resolve_random = rand(user_range[0]..user_range[1])
     loop_pars = {num: resolve_random, style: :word}
+    if loop_pars[:num] > maxwordpar then
+      overmax = true
+    end
   elsif valid_word_num?(loopcmds[1]) then
     resolve = loopcmds[1].to_i
     loop_pars = {num: resolve, style: :word}
+    if loop_pars[:num] > maxwordpar then
+      overmax = true
+    end
   elsif valid_num_range?(loopcmds[1]) or valid_int?(loopcmds[1]) then
     resolve = resolve_num_or_numrange(loopcmds[1])
     loop_pars = {num: resolve, style: :cycle}
+    if loop_pars[:num] > maxcycpar then
+      overmax = true
+    end
   elsif access_value(loopcmds[1].downcase.strip, curr_state)[:exists] == true then
     # future_work the following capability is for future usage - not currently
     # using integer vars, so this part isn't currently used.
@@ -2167,6 +2205,10 @@ def get_loop_pars(curr_state, cmdhash)
   else
     # ERR_ID POTATO
     stop_with_syntax_error.call(user_cmd, cmdhash[:linenum], cmdhash[:comline], correct_usage)
+  end
+  if overmax == true then
+    # WARN_ID DAMSON
+    severe_warning.call("You have specified a very long loop. This could take a long time. The maximum recommended loop is #{maxwordpar.to_s}W (for words) or #{maxcycpar.to_s} (for cycles)", user_cmd, cmdhash[:linenum], cmdhash[:comline])
   end
   return loop_pars
 end
@@ -2188,7 +2230,7 @@ def send_to_parser(curr_state, cmdhash)
       send(requested_command, curr_state, cmdhash)
     else
       # either it's a comment or an unrecognized command
-      if (cmdhash[:comline].strip[0] != "#") and (cmdhash[:comline].strip.upcase.start_with?("LOOP") == false) then
+      if (cmdhash[:comline].strip[0] != "#") and (cmdhash[:comline].strip.upcase.start_with?("LOOP") == false) and (is_end?(cmdhash[:comline].strip) == false) then
         # error - unrecognized command
         # ERR_ID PUMPKIN
         stop_with_general_command_error("Unrecognized command", "", cmdhash[:linenum].to_s, cmdhash[:comline])
@@ -2255,6 +2297,11 @@ def chunkarr_2_nestedprogarr(chunkarr)
   return currstack[0].drop(1)
 end
 
+def large_loop?(curr, fin, style)
+  # returns a boolean depending on whether the loop is considered large or not
+  (((fin - curr) > 5000) and (style == :word)) or (((fin - curr) > 20000) and (style == :cycle))
+end
+
 def loop_iterator(curr_state, nested_commands, curr_condition, stop_condition, change_style)
   # Returns the new state of the story. This function goes through the
   # nested commands and either performs the requested command (by sending
@@ -2269,68 +2316,71 @@ def loop_iterator(curr_state, nested_commands, curr_condition, stop_condition, c
   # number of words.
   # This function is responsible for parsing and executing the requested
   # quantity of repeats and stopping when the stop condition is satisfied.
-  if change_style == :cycle then
-    new_curr = curr_condition + 1
-  else
-    # change_style == :word
-    new_curr = word_count_arr(curr_state["story_so_far"])
-  end
-  if curr_condition >= stop_condition then
-    return curr_state
-  end
-  if (stop_condition - curr_condition) > 10000 then
-    # give user feedback to know that the program is still running
-    print "."
-  end
-  nested_commands.each{|command_item|
-    if command_item.class == Hash then
-      # it's a single command
-      curr_state["curr_line"] = command_item
-      curr_state = send_to_parser(curr_state, command_item)
-    else
-      # The command is itself an array so we need to loop through that
-      # Take a look at the first item of that command to set up the
-      # loop conditions properly, including any random numbers specified
-      first_item = command_item[0]
-      curr_state["curr_line"] = first_item
-      # we can be confident that first_item is not itself an array.
-      # this is because an array will start a LOOP command hash, even if
-      # this is part of nested loops.
-      # at this point it is a GEN, DESC, or LOOP.
-      if first_item[:comline].strip.upcase == "GEN" or first_word(first_item[:comline]).strip.upcase == "GEN" then
-        # need to pass this section to gen function
-        curr_state = gen_user_structure(curr_state, command_item)
-      # DESC
-      elsif first_item[:comline].strip.upcase == "DESC" or first_word(first_item[:comline]).strip.upcase == "DESC" then
-        # need to pass this section to store_desc function
-        curr_state = store_desc(curr_state, command_item)
+  while curr_condition < stop_condition
+    # loop the correct number of times
+    # for long loop, give user an indication that progress is happening
+    if large_loop?(curr_condition, stop_condition, change_style) then
+      if (change_style == :cycle) and (curr_condition % 1000 == 0) then
+        print "."
       else
-        # it's a LOOP statement
-        pars = get_loop_pars(curr_state, first_item)
-        # need to handle increments differently depending on style
-        # if words, calc current words, then stop cond is the desired wordnum
-        # added to that total.  If cycles, start at 0 and stop at desired num
-        if pars[:style] == :word then
-          # need to calc current and desired word numbers
-          next_curr = word_count_arr(curr_state["story_so_far"])
-          #       next_stop = curr_condition + pars[:num]
-          next_stop = next_curr + pars[:num]
-        else
-          # cycles
-          next_curr = 0
-          next_stop = pars[:num]
+        # :word
+        if (curr_condition % 1000 < 10) then
+          print "."
         end
-        curr_state = loop_iterator(curr_state, command_item, next_curr, next_stop, pars[:style])
       end
     end
-  }
-  # having gotten to the end of the commands, repeat them as needed
-  # in the case of words, the word count may have changed between the
-  # start of the function and now
-  if change_style == :word then
-    new_curr = word_count_arr(curr_state["story_so_far"])
+    nested_commands.each{|command_item|
+      if command_item.class == Hash then
+        # it's a single command
+        curr_state["curr_line"] = command_item
+        curr_state = send_to_parser(curr_state, command_item)
+      else
+        # It's a block of commands, i.e.
+        # the command is itself an array so we need to loop through that.
+        # Take a look at the first item of that command to set up the
+        # loop conditions properly, including any random numbers specified
+        first_item = command_item[0]
+        curr_state["curr_line"] = first_item
+        # we can be confident that first_item is not itself an array.
+        # this is because an array will start a LOOP command hash, even if
+        # this is part of nested loops.
+        # at this point it is a GEN, DESC, or LOOP.
+        if first_item[:comline].strip.upcase == "GEN" or first_word(first_item[:comline]).strip.upcase == "GEN" then
+          # need to pass this section to gen function
+          curr_state = gen_user_structure(curr_state, command_item)
+        # DESC
+        elsif first_item[:comline].strip.upcase == "DESC" or first_word(first_item[:comline]).strip.upcase == "DESC" then
+          # need to pass this section to store_desc function
+          curr_state = store_desc(curr_state, command_item)
+        else
+          # it's a LOOP statement
+          pars = get_loop_pars(curr_state, first_item)
+          # need to handle increments differently depending on style
+          # if words, calc current words, then stop cond is the desired wordnum
+          # added to that total.  If cycles, start at 0 and stop at desired num
+          if pars[:style] == :word then
+            # need to calc current and desired word numbers
+            next_curr = word_count_arr(curr_state["story_so_far"])
+            next_stop = next_curr + pars[:num]
+          else
+            # cycles
+            next_curr = 0
+            next_stop = pars[:num]
+          end
+          curr_state = loop_iterator(curr_state, command_item, next_curr, next_stop, pars[:style])
+        end
+      end
+    }
+    # increment curr_condition - this will depend on style
+    if change_style == :word then
+      curr_condition = word_count_arr(curr_state["story_so_far"])
+    else
+      # change_style is :cycle
+      curr_condition = curr_condition + 1
+    end
+    # endwhile below
   end
-  curr_state = loop_iterator(curr_state, nested_commands, new_curr, stop_condition, change_style)
+  return curr_state
 end
 
 ######################################
