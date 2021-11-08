@@ -1298,28 +1298,18 @@ end
 
 def a_an(one_sentence)
   # Given a string sentence (one_sentence), returns it with
-  # 'a' replaced with 'an' where needed. Note: This would be better
-  # implemented to handle mixed case situations future_work
+  # 'a' replaced with 'an' where needed. Note: It is not easy to predict
+  # the user's needs. e.g. "A Umbrella" vs "A UMBRELLA" vs "a USB drive"
   tempstr = one_sentence.dup
-  if one_sentence.match?(/\ a\ [aieou]/) then
-    tempstr.scan(/\ a\ [aeiou]/){|match|
+  if one_sentence.match?(/\ [Aa]\ [aieou]/) then
+    tempstr.scan(/\ [Aa]\ [aeiou]/){|match|
       startmatch = tempstr.dup.index(match)
       tempstr = tempstr.dup.insert(startmatch + 2, "n")}
   end
-  if  one_sentence.match?(/^a\ [aieou]/) then
-    tempstr.scan(/^a\ [aeiou]/){|match|
+  if  one_sentence.match?(/^[aA]\ [aieou]/) then
+    tempstr.scan(/^[aA]\ [aeiou]/){|match|
       startmatch = tempstr.dup.index(match)
       tempstr = tempstr.dup.insert(startmatch + 1, "n")}
-  end
-  if one_sentence.match?(/\ A\ [AEIOU]/) then
-    tempstr.scan(/\ A\ [AEIOU]/){|match|
-      startmatch = tempstr.dup.index(match)
-      tempstr = tempstr.dup.insert(startmatch + 2, "N")}
-  end
-  if  one_sentence.match?(/^A\ [AEIOU]/) then
-    tempstr.scan(/^A\ [AEIOU]/){|match|
-      startmatch = tempstr.dup.index(match)
-      tempstr = tempstr.dup.insert(startmatch + 1, "N")}
   end
   return tempstr
 end
