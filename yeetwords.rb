@@ -1080,6 +1080,70 @@ def split_l_r(str, delim=" = ")
   end
 end
 
+def allowable_output?(str)
+  # given a string value, returns true if the string corresponds to
+  # an allowable output format (e.g. md or html), and false if it does not
+  output_types = Set["md", "html"]
+  # NOTE - if output_types change, also need to change it in error handling
+  # in access_output and in output functions
+  if output_types.include?(str) then
+    return true
+  else
+    return false
+  end
+end
+
+def access_output(curr_state)
+  # given the current state, returns the output format (md or html)
+  # error handling - if output does not exist or is empty
+  if curr_state.include?("output") == false then
+    # ERR_ID BIRCH
+   stop_with_error("Output format storage is absent")
+  elsif allowable_output?(curr_state["output"]) == false then
+  # error handling
+    desc = "story contains an unrecognized output format"
+    comline = curr_state["curr_line"][:comline]
+    cmdname = get_command(comline)
+    linenum = curr_state["curr_line"][:linenum]
+    expected = "md, html"
+    actual = curr_state["output"]
+  # ERR_ID ASPEN
+    stop_with_error("#{desc} #{actual} discovered when executing the command #{cmdname} in line number  #{linenum}. Expected formats are: #{expected}")
+  else
+    return curr_state["output"]
+  end
+end
+
+def output(curr_state, cmdhash)
+  # returns the story state after user updates the desired output style.
+  # This command does not output the contents of the story, it merely
+  # stores the desired style of format (e.g. md, hmtl) in the
+  # story state
+  new_state = curr_state
+  outputpars = remove_first_word(cmdhash[:comline])
+  outputpars_arr = outputpars.split
+  # we expect 1 parameter
+  parnum = outputpars_arr.size
+    comline = cmdhash[:comline]
+    cmdname = "OUTPUT"
+    linenum = cmdhash[:linenum]
+  if parnum != 1 then
+  # ERR_ID WILLOW
+    stop_with_par_num_error.call(cmdname, linenum, comline, "1 parameter", "#{parnum.to_s}")
+  end
+    # we have 1 parameter as required, continue with program
+    desired_output = outputpars_arr[0]
+    # test for empty data?
+    if (desired_output == nil) or (desired_output == "") or (allowable_output?(desired_output.downcase) == false) then
+      # error handling
+      # ERR_ID HICKORY
+      stop_with_par_value_error.call(cmdname, linenum, comline, "md, html", desired_output.downcase)
+    end
+    # we have a valid parameter
+    new_state["output"] = desired_output.downcase
+  return new_state
+end
+
 def assigngen(curr_state, cmdhash)
   # given the current story state, returns the new story state upon
   # assigning or updating user gens
@@ -1314,13 +1378,11 @@ def a_an(one_sentence)
   return tempstr
 end
 
-def format_sentence(sentence, lettercode, curr_state, style = :md)
+def format_sentence(sentence, lettercode, curr_state, style)
   # formats 1 sentence string according to 1 lettercode and returns the
   # formatted version as a string.
   # curr_state is there merely to look up the current program line
   # for error reporting purposes.
-  # currently style = :md has no other options; in a future release I want
-  # to allow style :html future_work
   # Valid lettercodes for style = :md are as follows:
   # C - capitalization of first letter
   # A - a / an where needed
@@ -1343,14 +1405,15 @@ def format_sentence(sentence, lettercode, curr_state, style = :md)
   # Q - quotation marks surrounding the sentence
   # M - comma at end
   # K - question mark at end
-  # I - italics - please note that this adds a space on either side of
-  # the sentence as well. This is to avoid stretches of subsequent
-  # sentences turning into bolded items from having 2 asterisks next to
-  # each other. Users who wish to avoid the spaces may add
+  # I - italics - please note in md format that this adds a space on
+  # either side of the sentence as well. This is for md format to avoid
+  # stretches of subsequent sentences turning into bolded items from having
+  # 2 asterisks next to each other.
+  # Users who wish to avoid the spaces may add
   # italic formatting marks through an ASSIGN statement before and after
   # the set of consecutive italic sentences, instead of using FORMAT.
-  # B - bold - please note that this adds a space on either side of
-  # the sentence as well. This is to avoid stretches of subsequent
+  # B - bold - please note in md format that this adds a space on either side
+  # of the sentence as well. This is to avoid stretches of subsequent
   # sentences turning into both bold and italics, or otherwise
   # causing the markdown viewer confusion from multiple asterisks next to
   # each other. Users who wish to avoid the spaces may add their own
@@ -1379,33 +1442,81 @@ def format_sentence(sentence, lettercode, curr_state, style = :md)
   when "C"
     sentence.sub(/[[:alpha:]]/){|c| c.upcase}
   when "G"
-    sentence + "\n"
+    if style == "html" then
+      sentence + "<br />\n"
+    else
+      sentence + "\n"
+    end
   when "A"
     a_an(sentence)
   when "Q"
     "\"" + sentence + "\""
   when "B"
-    " **" + sentence + "** "
+    if style == "html" then
+      "<strong>" + sentence + "</strong>"
+    else
+      " **" + sentence + "** "
+    end
   when "I"
-    " *" + sentence + "* "
+    if style == "html" then
+      "<em>" + sentence + "</em>"
+    else
+      " *" + sentence + "* "
+    end
   when "L"
-    "  \n" + sentence
+    if style == "html" then
+      "\n<br />" + sentence
+    else
+      "  \n" + sentence
+    end
   when "H"
-    sentence + "  \n\n---   \n"
+    if style == "html" then
+      sentence + "\n<hr />\n"
+    else
+      sentence + "  \n\n---   \n"
+    end
   when "J"
-    "  \n\n---   \n" + sentence
+    if style == "html" then
+      "\n<hr />" + sentence
+    else
+      "  \n\n---   \n" + sentence
+    end
   when "Y"
-    sentence + "  \n"
+    if style == "html" then
+      sentence + "<br />\n"
+    else
+      sentence + "  \n"
+    end
   when "N"
-    "\n\n" + sentence
+    if style == "html" then
+      "\n<p></p>" + sentence
+    else
+      "\n\n" + sentence
+    end
   when "Z"
-    sentence + "\n\n"
+    if style == "html" then
+      sentence + "\n<p></p>"
+    else
+      sentence + "\n\n"
+    end
   when "T"
-    "  \n> " + sentence
+    if style == "html" then
+      "\n<blockquote>" + sentence + "</blockquote>\n"
+    else 
+      "  \n> " + sentence
+    end
   when "D"
-    "  \n# " + sentence + "  \n"
+    if style == "html" then
+      "\n<h1>" + sentence + "</h1>\n"
+    else
+      "  \n# " + sentence + "  \n"
+    end
   when "F"
-    "  \n## " + sentence + "  \n"    
+    if style == "html" then
+      "\n<h2>" + sentence + "</h2>\n"
+    else
+      "  \n## " + sentence + "  \n"
+    end
   else
     # ERR_ID ENDIVE
     stop_with_general_command_error("Unknown code: #{lettercode}", "FORMAT", curr_state["curr_line"][:linenum], curr_state["curr_line"][:comline])
@@ -1464,7 +1575,8 @@ def standard_write(story_arr, sentence_value, word_value, order_style, curr_cond
     subbed_sentence = one_sentence_suball(single_sentence, curr_state, word_value)
     # format the sentence
     format_chars = format.chars
-    formatted_sentence = format_chars.reduce(subbed_sentence){|changing_s, formatcode| format_sentence(changing_s, formatcode, curr_state)}
+    output_style = access_output(curr_state)
+    formatted_sentence = format_chars.reduce(subbed_sentence){|changing_s, formatcode| format_sentence(changing_s, formatcode, curr_state, output_style)}
     story_arr << formatted_sentence
     # need to determine next desired_index.
     # If we are doing "order", then we don't worry about the previous
@@ -1656,9 +1768,11 @@ def special_write(curr_state, cmdhash, cmdname, sentence_str, format_str)
     # ERR_ID KALE
     stop_with_general_command_error("Command takes no parameters", cmdname.upcase, cmdhash[:linenum], cmdhash[:comline])
   end
+  # get output style e.g. md, html
+  style = access_output(curr_state)
   # add the line
   formatted_sentence = format_str.chars.reduce(sentence_str){|changing_s, char|
-    format_sentence(changing_s, char, curr_state)}
+    format_sentence(changing_s, char, curr_state, style)}
   new_state["story_so_far"] << formatted_sentence
   return new_state
 end
@@ -2213,7 +2327,7 @@ def send_to_parser(curr_state, cmdhash)
   # existing parser function, then this function itself will halt with a
   # description of the problem. Note that the LOOP command is handled separately
   # using another function.
-  allowable_commands = Set[:refgender, :recite, :display, :newchapter, :newpara, :newline, :format, :write, :assigngen, :assignlist, :assigncatalog, :shuffle, :shift, :wordjoin, :upcase, :lowcase, :supcase, :slowcase, :call]
+  allowable_commands = Set[:refgender, :recite, :display, :newchapter, :newpara, :newline, :format, :write, :assigngen, :assignlist, :assigncatalog, :shuffle, :shift, :wordjoin, :upcase, :lowcase, :supcase, :slowcase, :call, :output]
   if cmdhash[:comline] != "" then
     requested_command = cmdhash[:comline].split[0].downcase.to_sym
     if allowable_commands.include?(requested_command) then
@@ -2408,6 +2522,7 @@ gender_info[:all] = ["female", "male", "nonbinary", "robot"]
 story_state = Hash.new
 story_state["gender_info"] = gender_info
 story_state["format"] = "ACPS"
+story_state["output"] = "md"
 starting_ch_num = 0
 story_state["chapter"] = starting_ch_num
 story_state["sentences"] = Hash.new
@@ -2429,6 +2544,9 @@ hasharr = progarr_2_hasharr(raw_commands)
 chunkarr = hasharr_2_chunkarr(hasharr)
 nested_commands = chunkarr_2_nestedprogarr(chunkarr)
 new_state = loop_iterator(story_state, nested_commands, 0, 1, :cycle)
+## TESTING
+
+## END TESTING
 ### send completed story to file output ###
 if new_state["story_so_far"][0] == nil then
   story_begin = "STORY"
@@ -2436,6 +2554,7 @@ else
   story_begin = new_state["story_so_far"][0].strip
 end
 story_begin_arr = story_begin.chars
+fname_ext = "." + access_output(new_state)
 proposed_fname = ""
 story_begin_arr.each{|ch|
   if ch.match?(/[[:alpha:]]/) then
@@ -2443,12 +2562,12 @@ story_begin_arr.each{|ch|
   end
 }
 if proposed_fname.size <= 9 then
-  final_proposed_fname = proposed_fname + "_" + rand(1000..9999).to_s + ".md"
+  final_proposed_fname = proposed_fname + "_" + rand(1000..9999).to_s + fname_ext
 else
-  final_proposed_fname = proposed_fname[0..8] + "_" + rand(1000..9999).to_s + ".md"
+  final_proposed_fname = proposed_fname[0..8] + "_" + rand(1000..9999).to_s + fname_ext
 end
 if final_proposed_fname == "" then
-  final_proposed_fname = "YourStory_" + rand(1000..9999).to_s + ".md"
+  final_proposed_fname = "YourStory_" + rand(1000..9999).to_s + fname_ext
 end
 print "\n"
 lexer_puts "About to write to file."
