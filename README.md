@@ -75,4 +75,4 @@ Create loops, change your vocabulary, kill off characters, add or subtract items
 2.  Male and female names - The male and female names card-coded into the program come from the most popular 1000 names in 2019 from [Popular baby names - Social Security Administration of the United States of America](https://www.ssa.gov/cgi-bin/popularnames.cgi). From this list, less common names were selected for use in this program (from within the 500 - 1000 most common names).
 
 ## License & development info
-YeetWords is licensed under the GNU GPL 3.0 license. This software was developed and tested by Veronique Chellgren using Ruby v 2.7.0 in a Linux environment. It has also been tested on Ruby v 2.7.2 in a Windows 10 environment.
+YeetWords is licensed under the GNU GPL 3.0 license. This software was developed and tested by Veronique Chellgren using Ruby v 2.7.0 in a Linux environment. It has also been tested on Ruby v 3.1.2 in a Windows 11 environment.
