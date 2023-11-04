@@ -1830,7 +1830,7 @@ def file_2_arr(filename, remove_blanks = false)
   # Items are purposely not unique here; if unique is desired this
   # must be done afterwards (using Ruby's uniq method)
   arrname = Array.new
-  if File.exists?(filename) then
+  if File.exist?(filename) then
     IO.foreach(filename){|theline|
       if remove_blanks == false then
         arrname << theline.chomp.strip
