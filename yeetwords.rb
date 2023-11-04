@@ -2571,14 +2571,14 @@ if final_proposed_fname == "" then
 end
 print "\n"
 lexer_puts "About to write to file."
-if File.exists?(final_proposed_fname) then
+if File.exist?(final_proposed_fname) then
   print "Enter filename for story: "
   final_filename = gets.chomp
   if final_filename == "" then final_filename = final_proposed_fname end
 else
   final_filename = final_proposed_fname
 end
-if File.exists?(final_filename) then
+if File.exist?(final_filename) then
   abort "STOPPING: ERROR - Desired filename #{final_filename} already exists. No changes were made to it."
 else
   lexer_puts("Writing #{word_count_arr(new_state["story_so_far"])} words to file: #{final_filename}")
